@@ -120,61 +120,62 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-/* particles */
-const canvas=document.getElementById("particles");
-const ctx=canvas.getContext("2d");
-canvas.width=innerWidth; canvas.height=innerHeight;
-let p=[];
-for(let i=0;i<60;i++){
-    p.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2,dx:(Math.random()-0.5)*0.3,dy:(Math.random()-0.5)*0.3});
-}
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="rgba(46,166,255,0.6)";
-    p.forEach(a=>{
-        ctx.beginPath();
-        ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
-        ctx.fill();
-        a.x+=a.dx; a.y+=a.dy;
-        if(a.x<0||a.x>canvas.width) a.dx*=-1;
-        if(a.y<0||a.y>canvas.height) a.dy*=-1;
-    });
-    requestAnimationFrame(draw);
-}
-draw();
+const steps = ["step1","step2","step3","step4"];
+let current = 0;
 
-/* steps */
-const steps=["step1","step2","step3","step4"];
-let current=0;
+function showStep(i){
+    steps.forEach((id,idx)=>{
+        const el = document.getElementById(id);
+        el.classList.toggle("active", idx===i);
+    });
+}
 
 function nextStep(){
-    if(current>=steps.length-1) return;
-    document.getElementById(steps[current]).classList.remove("active");
-    current++;
-    document.getElementById(steps[current]).classList.add("active");
+    if(current < steps.length-1){
+        current++;
+        showStep(current);
+    }
 }
 
-name.addEventListener("keydown",e=>{if(e.key==="Enter"&&name.value)nextStep();});
-country.addEventListener("keydown",e=>{if(e.key==="Enter"&&country.value)nextStep();});
-device.addEventListener("keydown",e=>{if(e.key==="Enter"&&device.value)nextStep();});
+function createNextButton(inputEl){
+    const btn = document.createElement("button");
+    btn.textContent = "Next";
+    btn.style.marginTop = "14px";
+    btn.onclick = nextStep;
+
+    inputEl.parentElement.appendChild(btn);
+
+    inputEl.addEventListener("input", ()=>{
+        btn.style.display = inputEl.value.trim() ? "block" : "none";
+    });
+
+    btn.style.display = "none";
+}
+
+/* подключаем к полям */
+createNextButton(document.getElementById("name"));
+createNextButton(document.getElementById("country"));
+createNextButton(document.getElementById("device"));
 
 /* send */
-send.onclick=()=>{
+document.getElementById("send").onclick = ()=>{
     if(!tg || typeof tg.sendData!=="function"){
         alert("Open from Telegram bot");
         return;
     }
 
-    const payload={
-        name:name.value,
-        country:country.value,
-        device:device.value,
-        purpose:purpose.value,
-        lang:tg.initDataUnsafe?.user?.language_code||"en"
+    const payload = {
+        name: name.value,
+        country: country.value,
+        device: device.value,
+        purpose: purpose.value,
+        lang: tg.initDataUnsafe?.user?.language_code || "en"
     };
 
     tg.sendData(JSON.stringify(payload));
 };
+
+showStep(0);
 </script>
 
 </body>
